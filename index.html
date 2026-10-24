@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Institutional Macro Terminal & Global Analytics</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0e14;
+            color: #c9d1d9;
+        }
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .terminal-card {
+            background-color: #121721;
+            border: 1px solid #1f293d;
+        }
+        .terminal-card:hover {
+            border-color: #2d3b59;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0b0e14;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #1f293d;
+            border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #2d3b59;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col custom-scrollbar">
+
+    <!-- Top Navigation / Header -->
+    <header class="terminal-card border-b border-gray-800 bg-opacity-90 backdrop-blur sticky top-0 z-50 px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="bg-blue-600/20 p-2 rounded-lg border border-blue-500/30">
+                <i data-lucide="globe" class="w-6 h-6 text-blue-400"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold text-white tracking-wide flex items-center gap-2">
+                    GLOBAL MACRO & FX TERMINAL
+                    <span class="text-xs font-mono bg-blue-900/50 text-blue-300 px-2 py-0.5 rounded border border-blue-700/50">ENTERPRISE 5.0</span>
+                </h1>
+                <p class="text-xs text-gray-400">Monitoreo de Liquidez, Bancos Centrales (Fed/BCE/BoJ/BoE), FX y Estabilidad Financiera</p>
+            </div>
+        </div>
+
+        <!-- Global Central Bank Policy Rate Quick-Bar -->
+        <div class="hidden xl:flex items-center space-x-4 font-mono text-xs bg-gray-900/90 px-4 py-2 rounded-lg border border-gray-800">
+            <div class="flex items-center space-x-1.5">
+                <span class="text-gray-400">🇺🇸 FED:</span>
+                <span class="text-emerald-400 font-bold">4.75%</span>
+            </div>
+            <span class="text-gray-700">|</span>
+            <div class="flex items-center space-x-1.5">
+                <span class="text-gray-400">🇪🇺 BCE:</span>
+                <span class="text-blue-400 font-bold">3.25%</span>
+            </div>
+            <span class="text-gray-700">|</span>
+            <div class="flex items-center space-x-1.5">
+                <span class="text-gray-400">🇬🇧 BoE:</span>
+                <span class="text-purple-400 font-bold">4.75%</span>
+            </div>
+            <span class="text-gray-700">|</span>
+            <div class="flex items-center space-x-1.5">
+                <span class="text-gray-400">🇯🇵 BoJ:</span>
+                <span class="text-rose-400 font-bold">0.25%</span>
+            </div>
+        </div>
+
+        <!-- System Status & Time -->
+        <div class="flex items-center space-x-4">
+            <div class="hidden md:flex items-center space-x-2 text-xs font-mono bg-gray-900/80 px-3 py-1.5 rounded-md border border-gray-800">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-gray-400">ESTADO:</span>
+                <span class="text-emerald-400 font-semibold">MERCADOS ABIERTOS</span>
+            </div>
+            <div class="text-right font-mono text-xs text-gray-400">
+                <div id="live-time" class="text-white font-semibold">--:--:-- UTC</div>
+                <div>OCTUBRE 2026</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Regional & Asset Multi-Page Tabs -->
+    <nav class="bg-gray-950 border-b border-gray-800/80 px-6 py-2.5 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex space-x-2 overflow-x-auto custom-scrollbar">
+            <button onclick="setMainModule('us')" id="module-btn-us" class="module-nav-btn active px-4 py-2 rounded-lg text-xs font-semibold font-mono border border-blue-500/40 bg-blue-500/10 text-blue-400 flex items-center gap-2">
+                🇺🇸 US Macro & Liquidez
+            </button>
+            <button onclick="setMainModule('eurozone')" id="module-btn-eurozone" class="module-nav-btn px-4 py-2 rounded-lg text-xs font-semibold font-mono border border-transparent text-gray-400 hover:text-white hover:bg-gray-800 flex items-center gap-2">
+                🇪🇺 Eurozona & BCE
+            </button>
+            <button onclick="setMainModule('fx')" id="module-btn-fx" class="module-nav-btn px-4 py-2 rounded-lg text-xs font-semibold font-mono border border-transparent text-gray-400 hover:text-white hover:bg-gray-800 flex items-center gap-2">
+                🌐 Global FX & Carry Trade
+            </button>
+            <button onclick="setMainModule('all')" id="module-btn-all" class="module-nav-btn px-4 py-2 rounded-lg text-xs font-semibold font-mono border border-transparent text-gray-400 hover:text-white hover:bg-gray-800 flex items-center gap-2">
+                📊 Vista Consolidada
+            </button>
+        </div>
+
+        <!-- Ticker Tape Summary -->
+        <div class="hidden lg:flex items-center space-x-6 text-xs font-mono text-gray-400">
+            <div>EUR/USD: <span class="text-white font-semibold">1.0845</span> <span class="text-emerald-400 text-[10px]">+0.12%</span></div>
+            <div>USD/JPY: <span class="text-white font-semibold">152.30</span> <span class="text-rose-400 text-[10px]">-0.24%</span></div>
+            <div>DXY: <span class="text-white font-semibold">103.85</span> <span class="text-emerald-400 text-[10px]">+0.08%</span></div>
+            <div>Bund 10Y: <span class="text-white font-semibold">2.28%</span> <span class="text-gray-400 text-[10px]">0 bps</span></div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="flex-1 p-6 space-y-6 max-w-[1750px] mx-auto w-full">
+
+        <!-- KPI Executive Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4" id="kpi-grid">
+            <!-- Dynamic KPIs injected via JS based on selected module -->
+        </div>
+
+        <!-- Main Workspace (Chart + Controls + Calculators) -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+            <!-- Left 3 Columns: Interactive Chart & Category Navigation -->
+            <div class="lg:col-span-3 space-y-6">
+                <div class="terminal-card rounded-xl p-6">
+                    
+                    <!-- Sub Navigation Category Tabs -->
+                    <div class="flex flex-wrap items-center justify-between border-b border-gray-800 pb-4 mb-6 gap-4">
+                        <div class="flex space-x-2 overflow-x-auto custom-scrollbar" id="subtabs-container">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+
+                        <!-- Timeframe Selection -->
+                        <div class="flex items-center space-x-1 bg-gray-900 p-1 rounded-lg border border-gray-800 text-xs font-mono">
+                            <button onclick="updateTimeframe('1M')" class="tf-btn px-2.5 py-1 rounded text-gray-400 hover:text-white">1M</button>
+                            <button onclick="updateTimeframe('6M')" class="tf-btn px-2.5 py-1 rounded bg-blue-600 text-white font-bold">6M</button>
+                            <button onclick="updateTimeframe('1Y')" class="tf-btn px-2.5 py-1 rounded text-gray-400 hover:text-white">1Y</button>
+                            <button onclick="updateTimeframe('5Y')" class="tf-btn px-2.5 py-1 rounded text-gray-400 hover:text-white">5Y</button>
+                        </div>
+                    </div>
+
+                    <!-- Chart Title & Subtitle -->
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h2 id="chart-title" class="text-lg font-bold text-white flex items-center gap-2">
+                                Panel Principal Macro
+                            </h2>
+                            <p id="chart-desc" class="text-xs text-gray-400 mt-1">
+                                Carga de indicadores e interacción en tiempo real.
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a id="official-source-link" href="#" target="_blank" class="text-xs font-mono bg-gray-900 hover:bg-gray-800 text-blue-400 px-3 py-1.5 rounded border border-gray-800 flex items-center gap-1.5 transition">
+                                <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Fuente Oficial
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Main Chart Canvas -->
+                    <div class="relative w-full h-[400px]">
+                        <canvas id="macroChart"></canvas>
+                    </div>
+
+                    <!-- Metric Insights Footer -->
+                    <div class="mt-6 pt-4 border-t border-gray-800 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                        <div class="bg-gray-900/60 p-3 rounded-lg border border-gray-800/80">
+                            <span class="text-gray-400 block font-mono mb-1">IMPACTO EN MERCADO:</span>
+                            <span id="insight-impact" class="text-amber-300 font-medium">Análisis de liquidez disponible.</span>
+                        </div>
+                        <div class="bg-gray-900/60 p-3 rounded-lg border border-gray-800/80">
+                            <span class="text-gray-400 block font-mono mb-1">CORRELACIÓN ASOCIADA:</span>
+                            <span id="insight-corr" class="text-rose-400 font-medium">Relación con FX y Deuda Sobrenacional.</span>
+                        </div>
+                        <div class="bg-gray-900/60 p-3 rounded-lg border border-gray-800/80">
+                            <span class="text-gray-400 block font-mono mb-1">PRÓXIMO CATALIZADOR:</span>
+                            <span id="insight-next" class="text-gray-200 font-medium">Reunión de Política Monetaria.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Metrics Table Grid -->
+                <div class="terminal-card rounded-xl p-6">
+                    <div class="flex flex-wrap items-center justify-between mb-4 gap-4">
+                        <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                            <i data-lucide="table" class="w-4 h-4 text-blue-400"></i> Matriz Consolidada de Indicadores Globales
+                        </h3>
+                        <input type="text" id="metric-search" placeholder="Filtrar por indicador..." class="bg-gray-900 border border-gray-800 text-gray-200 px-3 py-1.5 rounded text-xs focus:outline-none focus:border-blue-500 font-mono w-64">
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs font-mono">
+                            <thead class="bg-gray-900/80 text-gray-400 uppercase text-[10px] border-b border-gray-800">
+                                <tr>
+                                    <th class="p-3">Indicador / Activo</th>
+                                    <th class="p-3">Región / Banco</th>
+                                    <th class="p-3">Último Dato</th>
+                                    <th class="p-3">Dato Previo</th>
+                                    <th class="p-3">Señal de Mercado</th>
+                                    <th class="p-3 text-right">Fuente Oficial</th>
+                                </tr>
+                            </thead>
+                            <tbody id="metrics-table-body" class="divide-y divide-gray-800/60">
+                                <!-- Dynamic rows populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right 1 Column: Institutional Calculators & Global Calendar -->
+            <div class="space-y-6">
+
+                <!-- CALCULATOR 1: FX Rate Differential & Carry Calculator (NEW) -->
+                <div class="terminal-card rounded-xl p-5 border-l-4 border-l-blue-500">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-3">
+                        <i data-lucide="coins" class="w-4 h-4 text-blue-400"></i> Calculadora FX Yield Carry & Differential
+                    </h3>
+                    <p class="text-xs text-gray-400 mb-4">
+                        Estima el rendimiento anualizado de Carry Trade por diferencial de tipos de interés entre bancos centrales.
+                    </p>
+                    <div class="space-y-3 text-xs font-mono">
+                        <div>
+                            <label class="text-gray-400 block mb-1">Divisa de Compra (Larga):</label>
+                            <select id="carry-long" onchange="calculateFXCarry()" class="w-full bg-gray-900 border border-gray-800 rounded p-2 text-white font-mono focus:outline-none focus:border-blue-500">
+                                <option value="4.75" selected>USD - Fed (4.75%)</option>
+                                <option value="4.75">GBP - BoE (4.75%)</option>
+                                <option value="3.25">EUR - BCE (3.25%)</option>
+                                <option value="0.25">JPY - BoJ (0.25%)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-gray-400 block mb-1">Divisa de Venta / Financiación (Corta):</label>
+                            <select id="carry-short" onchange="calculateFXCarry()" class="w-full bg-gray-900 border border-gray-800 rounded p-2 text-white font-mono focus:outline-none focus:border-blue-500">
+                                <option value="0.25" selected>JPY - BoJ (0.25%)</option>
+                                <option value="3.25">EUR - BCE (3.25%)</option>
+                                <option value="4.75">USD - Fed (4.75%)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-gray-400 block mb-1">Apalancamiento Operativo:</label>
+                            <input type="number" id="carry-leverage" value="3" min="1" max="20" oninput="calculateFXCarry()" class="w-full bg-gray-900 border border-gray-800 rounded p-2 text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div class="bg-gray-900/80 p-3 rounded border border-gray-800 text-center">
+                            <span class="text-gray-400 block text-[11px]">Diferencial Neta + Swap Estimado:</span>
+                            <span id="carry-result" class="text-xl font-bold text-emerald-400">+13.50% p.a.</span>
+                            <span id="carry-status" class="block text-[10px] text-emerald-300 mt-1">CARRY TRADE ATRACTIVO</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CALCULATOR 2: Yield Curve Recession Probability -->
+                <div class="terminal-card rounded-xl p-5 border-l-4 border-l-amber-500">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-3">
+                        <i data-lucide="calculator" class="w-4 h-4 text-amber-400"></i> Modelo Recesión Curva de Tipos
+                    </h3>
+                    <div class="space-y-3 text-xs font-mono">
+                        <div>
+                            <label class="text-gray-400 block mb-1">Spread 10Y - 2Y (Puntos Básicos):</label>
+                            <input type="number" id="spread-input" value="18" oninput="calculateRecessionProb()" class="w-full bg-gray-900 border border-gray-800 rounded p-2 text-white font-mono focus:outline-none focus:border-amber-500">
+                        </div>
+                        <div class="bg-gray-900/80 p-3 rounded border border-gray-800 text-center">
+                            <span class="text-gray-400 block text-[11px]">Probabilidad Recesión (12M):</span>
+                            <span id="recession-prob-result" class="text-xl font-bold text-amber-400">32.4%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CALCULATOR 3: TGA Drain Simulator -->
+                <div class="terminal-card rounded-xl p-5 border-l-4 border-l-purple-500">
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-3">
+                        <i data-lucide="zap" class="w-4 h-4 text-purple-400"></i> Simulador Liquidez TGA (Fed)
+                    </h3>
+                    <div class="space-y-3 text-xs font-mono">
+                        <div>
+                            <label class="text-gray-400 block mb-1">Emisión Neta Tesoro ($B):</label>
+                            <input type="number" id="tga-issue-input" value="150" oninput="calculateTGADrain()" class="w-full bg-gray-900 border border-gray-800 rounded p-2 text-white focus:outline-none focus:border-purple-500">
+                        </div>
+                        <div class="bg-gray-900/80 p-3 rounded border border-gray-800">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Drenaje Reservas:</span>
+                                <span id="tga-drain-result" class="text-rose-400 font-bold">-$90.0B</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Global Calendar -->
+                <div class="terminal-card rounded-xl p-5">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i data-lucide="calendar" class="w-4 h-4 text-blue-400"></i> Agenda Global de Bancos Centrales
+                        </h3>
+                        <span class="text-[10px] font-mono text-gray-400">UTC</span>
+                    </div>
+                    <div class="space-y-2 text-xs font-mono">
+                        <div class="p-2 rounded bg-gray-900/60 border border-gray-800 flex justify-between">
+                            <div>
+                                <div class="text-white font-medium">🇪🇺 Decisión Tipos BCE</div>
+                                <div class="text-[10px] text-gray-500">Frankfurt - 12:15 GMT</div>
+                            </div>
+                            <span class="bg-blue-950 text-blue-300 px-1.5 py-0.5 rounded text-[10px]">3.25% ESP</span>
+                        </div>
+                        <div class="p-2 rounded bg-gray-900/60 border border-gray-800 flex justify-between">
+                            <div>
+                                <div class="text-white font-medium">🇺🇸 FOMC Decision Fed</div>
+                                <div class="text-[10px] text-gray-500">Washington - 18:00 GMT</div>
+                            </div>
+                            <span class="bg-purple-950 text-purple-300 px-1.5 py-0.5 rounded text-[10px]">25bps CUT</span>
+                        </div>
+                        <div class="p-2 rounded bg-gray-900/60 border border-gray-800 flex justify-between">
+                            <div>
+                                <div class="text-white font-medium">🇯🇵 BoJ Rate Statement</div>
+                                <div class="text-[10px] text-gray-500">Tokyo - 03:00 GMT</div>
+                            </div>
+                            <span class="bg-rose-950 text-rose-300 px-1.5 py-0.5 rounded text-[10px]">HAWKISH</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="terminal-card border-t border-gray-800 py-4 px-6 text-center text-xs text-gray-500 font-mono flex flex-wrap justify-between items-center gap-4">
+        <div>
+            GLOBAL MACRO TERMINAL &copy; 2026 | FUENTES INTEGRADAS: FRED, ECB DATA PORTAL, EUROSTAT, BLS & BOJ
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="hover:text-gray-300 cursor-pointer">Documentación API</span>
+            <span>•</span>
+            <span class="hover:text-gray-300 cursor-pointer">Bancos Centrales</span>
+            <span>•</span>
+            <span class="hover:text-gray-300 cursor-pointer">Soporte Institutional</span>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Engine -->
+    <script>
+        // Global State Management
+        let currentModule = 'us'; // 'us', 'eurozone', 'fx', 'all'
+        let currentCategory = 'us-liquidity';
+        let currentChart = null;
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Real-time Clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-time').innerText = now.toUTCString().split(' ')[4] + ' UTC';
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Comprehensive Global Metrics Dataset
+        const globalMetricsData = [
+            // US METRICS
+            { module: 'us', category: 'us-liquidity', name: 'US TGA (Cuenta Tesoro)', region: '🇺🇸 Fed / US', last: '$961.76B', prev: '$945.15B', signal: 'Drenaje Reservas', signalType: 'bearish', link: 'https://en.macromicro.me/collections/9/us-market-relative/34339/us-treasury-general-account' },
+            { module: 'us', category: 'us-liquidity', name: 'Fed Assets (WALCL)', region: '🇺🇸 Fed', last: '$6.75T', prev: '$6.78T', signal: 'QT Activo', signalType: 'neutral', link: 'https://fred.stlouisfed.org/series/WALCL' },
+            { module: 'us', category: 'us-liquidity', name: 'Fed Reverse Repo (RRP)', region: '🇺🇸 Fed', last: '$234.1B', prev: '$242.8B', signal: 'Búfer Bajo', signalType: 'caution', link: 'https://fred.stlouisfed.org/series/RPTC' },
+            { module: 'us', category: 'us-inflation', name: '5Y Breakeven Inflation', region: '🇺🇸 US Treasury', last: '2.45%', prev: '2.40%', signal: 'Expectativas Ancladas', signalType: 'bullish', link: 'https://fred.stlouisfed.org/series/T5YIE' },
+            { module: 'us', category: 'us-risk', name: 'US High Yield OAS Spread', region: '🇺🇸 US Corporate', last: '3.33%', prev: '3.33%', signal: 'Crédito Estable', signalType: 'bullish', link: 'https://fred.stlouisfed.org/series/BAMLH0A0HYM2' },
+
+            // EUROZONE / ECB METRICS
+            { module: 'eurozone', category: 'ez-rates', name: 'ECB Deposit Facility Rate', region: '🇪🇺 BCE', last: '3.25%', prev: '3.50%', signal: 'Ciclo de Recortes', signalType: 'bullish', link: 'https://data.ecb.europa.eu/main-figures/ecb-interest-rates-and-performance' },
+            { module: 'eurozone', category: 'ez-inflation', name: 'Eurozone HICP Inflation YoY', region: '🇪🇺 Eurostat', last: '1.80%', prev: '2.20%', signal: 'Bajo Target 2.0%', signalType: 'bullish', link: 'https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_manr/default/table' },
+            { module: 'eurozone', category: 'ez-bonds', name: 'Alemania 10Y Bund Yield', region: '🇩🇪 Deuda Sobrenacional', last: '2.28%', prev: '2.31%', signal: 'Tasa de Refugio', signalType: 'neutral', link: 'https://www.tradingview.com/symbols/TVC-DE10Y/' },
+            { module: 'eurozone', category: 'ez-liquidity', name: 'ECB Balance Sheet (APP/PEPP)', region: '🇪🇺 BCE', last: '€6.42T', prev: '€6.48T', signal: 'Reducción Pasiva', signalType: 'neutral', link: 'https://data.ecb.europa.eu/stats/policy-and-exchange-rates/ecb-balance-sheet' },
+            { module: 'eurozone', category: 'ez-growth', name: 'Eurozone Composite PMI', region: '🇪🇺 S&P Global', last: '49.6', prev: '48.9', signal: 'Estancamiento Leve', signalType: 'caution', link: 'https://www.pmi.spglobal.com/' },
+
+            // GLOBAL FX & CENTRAL BANKS METRICS
+            { module: 'fx', category: 'fx-pairs', name: 'EUR/USD Spot Rate', region: '🌐 FX Spot', last: '1.0845', prev: '1.0820', signal: 'Rango Lateral', signalType: 'neutral', link: 'https://www.tradingview.com/symbols/EURUSD/' },
+            { module: 'fx', category: 'fx-pairs', name: 'USD/JPY Spot Rate', region: '🇯🇵/🇺🇸 FX Spot', last: '152.30', prev: '153.10', signal: 'Intervención Posible', signalType: 'caution', link: 'https://www.tradingview.com/symbols/USDJPY/' },
+            { module: 'fx', category: 'fx-dxy', name: 'US Dollar Index (DXY)', region: '🇺🇸 Ícono FX', last: '103.85', prev: '103.70', signal: 'Fortaleza Relativa', signalType: 'bullish', link: 'https://www.tradingview.com/symbols/DXY/' },
+            { module: 'fx', category: 'fx-divergence', name: 'Diff Tipos 10Y US-Alemania', region: '🇺🇸/🇩🇪 Spread Yield', last: '+194 bps', prev: '+190 bps', signal: 'Soporte al USD', signalType: 'bullish', link: 'https://fred.stlouisfed.org/' },
+            { module: 'fx', category: 'fx-boj', name: 'BoJ Uncollateralized Call Rate', region: '🇯🇵 Banco de Japón', last: '0.25%', prev: '0.10%', signal: 'Normalización', signalType: 'caution', link: 'https://www.boj.or.jp/en/index.htm' }
+        ];
+
+        // KPI Configurations for Each Main Module
+        const kpiConfigurations = {
+            us: [
+                { title: 'Fed Target Rate', val: '4.75% - 5.00%', sub: 'Recortes Graduales', col: 'blue', icon: 'building-2' },
+                { title: 'VIX Volatilidad', val: '18.42', sub: 'Riesgo Moderado', col: 'amber', icon: 'activity' },
+                { title: 'Curva 10Y - 2Y', val: '+18 bps', sub: 'Desinvertida', col: 'emerald', icon: 'trending-up' },
+                { title: 'Cuenta TGA', val: '$961.8B', sub: 'Drenaje Activo', col: 'purple', icon: 'landmark' },
+                { title: '5Y Breakeven', val: '2.45%', sub: 'Inflación Anclada', col: 'rose', icon: 'flame' },
+                { title: 'Fear & Greed', val: '62 / 100', sub: 'Codicia / Apetito', col: 'cyan', icon: 'gauge' }
+            ],
+            eurozone: [
+                { title: 'BCE Tasa Depósito', val: '3.25%', sub: 'Flexibilización', col: 'blue', icon: 'landmark' },
+                { title: 'IPC Eurozona YoY', val: '1.80%', sub: 'Bajo el Objetivo', col: 'emerald', icon: 'percent' },
+                { title: 'Bund Alemán 10Y', val: '2.28%', sub: 'Rendimiento Base', col: 'purple', icon: 'line-chart' },
+                { title: 'Spread Italia-Alemania', val: '122 bps', sub: 'Riesgo Periferia Bajo', col: 'amber', icon: 'shield-alert' },
+                { title: 'EUR/USD Spot', val: '1.0845', sub: 'Soporte en 1.08', col: 'cyan', icon: 'coins' },
+                { title: 'Balance BCE', val: '€6.42T', sub: 'Reducción QT', col: 'rose', icon: 'building' }
+            ],
+            fx: [
+                { title: 'US Dollar Index DXY', val: '103.85', sub: 'Sesgo Alcista', col: 'blue', icon: 'dollar-sign' },
+                { title: 'USD/JPY Spot', val: '152.30', sub: 'Riesgo BoJ', col: 'rose', icon: 'japanese-yen' },
+                { title: 'Diferencial US-DE 10Y', val: '+194 bps', sub: 'Atractivo Carry USD', col: 'emerald', icon: 'arrow-right-left' },
+                { title: 'Tipo BoJ (Japón)', val: '0.25%', sub: 'Subidas Graduales', col: 'amber', icon: 'building-2' },
+                { title: 'Tipo BoE (UK)', val: '4.75%', sub: 'Pausa Prudente', col: 'purple', icon: 'landmark' },
+                { title: 'Volatilidad FX (CVIX)', val: '8.12', sub: 'Volatilidad Baja', col: 'cyan', icon: 'activity' }
+            ],
+            all: [
+                { title: 'Fed Target', val: '4.75%', sub: 'EE. UU.', col: 'blue', icon: 'building-2' },
+                { title: 'BCE Depósito', val: '3.25%', sub: 'Eurozona', col: 'purple', icon: 'landmark' },
+                { title: 'EUR/USD', val: '1.0845', sub: 'FX Par Principal', col: 'cyan', icon: 'coins' },
+                { title: 'IPC EE. UU. Suby.', val: '3.10%', sub: 'Inflación US', col: 'rose', icon: 'flame' },
+                { title: 'IPC Eurozona', val: '1.80%', sub: 'Inflación EZ', col: 'emerald', icon: 'percent' },
+                { title: 'VIX Global', val: '18.42', sub: 'Volatilidad', col: 'amber', icon: 'activity' }
+            ]
+        };
+
+        // Subtabs for Dynamic Switching
+        const subtabsByModule = {
+            us: [
+                { id: 'us-liquidity', label: 'Liquidez & Fed', icon: 'droplets' },
+                { id: 'us-inflation', label: 'Inflación EE. UU.', icon: 'percent' },
+                { id: 'us-risk', label: 'Riesgo & Crédito US', icon: 'shield-alert' }
+            ],
+            eurozone: [
+                { id: 'ez-rates', label: 'Tipos BCE & Política', icon: 'landmark' },
+                { id: 'ez-inflation', label: 'Inflación Eurozona', icon: 'flame' },
+                { id: 'ez-bonds', label: 'Deuda & Bunds', icon: 'line-chart' }
+            ],
+            fx: [
+                { id: 'fx-divergence', label: 'Diferencial Tipos Global', icon: 'arrow-right-left' },
+                { id: 'fx-pairs', label: 'Pares Principales FX', icon: 'coins' },
+                { id: 'fx-dxy', label: 'Índice DXY & BoJ', icon: 'dollar-sign' }
+            ],
+            all: [
+                { id: 'us-liquidity', label: 'US Liquidez', icon: 'droplets' },
+                { id: 'ez-rates', label: 'BCE Eurozona', icon: 'landmark' },
+                { id: 'fx-divergence', label: 'Diferencial FX', icon: 'arrow-right-left' }
+            ]
+        };
+
+        // Datasets for Dynamic Chart.js Rendering
+        const chartDataMap = {
+            'us-liquidity': {
+                title: 'EE. UU.: Cuenta TGA vs Balance de la Fed',
+                desc: 'Mide la extracción de liquidez bancaria en EE. UU. mediante la emisión del Tesoro.',
+                source: 'https://fred.stlouisfed.org/series/WALCL',
+                impact: 'Drenaje moderado sobre reservas comerciales.',
+                corr: 'Inversa con S&P 500 durante emisiones masivas.',
+                next: 'Reembolso Trimestral del Tesoro (QRA).',
+                labels: ['May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+                datasets: [
+                    { label: 'TGA Balance ($B)', data: [680, 750, 720, 810, 890, 961.8], borderColor: '#a855f7', backgroundColor: 'rgba(168, 85, 247, 0.1)', fill: true },
+                    { label: 'Balance Fed ($T x100)', data: [720, 710, 700, 690, 680, 675], borderColor: '#3b82f6', borderDash: [5, 5] }
+                ]
+            },
+            'us-inflation': {
+                title: 'EE. UU.: Core CPI vs 5Y Breakeven Inflation',
+                desc: 'Compara el IPC subyacente real con las expectativas a 5 años del mercado de bonos.',
+                source: 'https://fred.stlouisfed.org/series/T5YIE',
+                impact: 'Estable. Justifica política de recortes de la Fed.',
+                corr: 'Directa con rentabilidad del Bono a 10 años.',
+                next: 'Publicación de IPC Subyacente en EE. UU.',
+                labels: ['May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+                datasets: [
+                    { label: 'Core CPI YoY (%)', data: [3.6, 3.5, 3.3, 3.2, 3.2, 3.1], borderColor: '#f43f5e' },
+                    { label: '5Y Breakeven (%)', data: [2.32, 2.28, 2.35, 2.38, 2.40, 2.45], borderColor: '#f59e0b' }
+                ]
+            },
+            'us-risk': {
+                title: 'EE. UU.: VIX Index vs Spreads de Crédito High Yield',
+                desc: 'Mide la tensión en el mercado bursátil comparada con el riesgo de impago corporativo.',
+                source: 'https://fred.stlouisfed.org/series/BAMLH0A0HYM2',
+                impact: 'Sin estrés crediticio sistémico.',
+                corr: 'Directa entre repuntes de VIX y spreads.',
+                next: 'Vencimiento Opciones OPEX.',
+                labels: ['May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+                datasets: [
+                    { label: 'VIX Index', data: [13.5, 12.8, 16.2, 23.4, 15.8, 18.42], borderColor: '#f59e0b' },
+                    { label: 'HY Spread (% x5)', data: [15.5, 15.0, 16.5, 18.5, 16.8, 16.65], borderColor: '#10b981' }
+                ]
+            },
+            'ez-rates': {
+                title: 'Eurozona: Tasa Depósito BCE vs Inflación HICP',
+                desc: 'Evolución de la tasa de interés oficial del BCE frente al avance del costo de vida.',
+                source: 'https://data.ecb.europa.eu/main-figures/ecb-interest-rates-and-performance',
+                impact: 'Política acomodaticia en marcha.',
+                corr: 'Directa con la cotización del Euro (EUR/USD).',
+                next: 'Reunión de Política Monetaria del BCE.',
+                labels: ['May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+                datasets: [
+                    { label: 'Tasa Depósito BCE (%)', data: [4.00, 3.75, 3.75, 3.50, 3.50, 3.25], borderColor: '#3b82f6' },
+                    { label: 'Inflación HICP YoY (%)', data: [2.6, 2.5, 2.6, 2.2, 1.8, 1.8], borderColor: '#10b981' }
+                ]
+            },
+            'ez-inflation': {
+                title: 'Eurozona: Desglose HICP General vs Subyacente',
+                desc: 'Monitorea la convergencia de la inflación europea hacia la meta del 2.0%.',
+                source: 'https://ec.europa.eu/eurostat',
+                impact: 'Favorables para acelerar bajadas de tipos.',
+                corr: 'Inversa con precio de los bonos europeos.',
+                next: 'Lectura preliminar de IPC Eurostat.',
+                labels: ['May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+                datasets: [
+                    { label: 'HICP Subyacente (%)', data: [2.9, 2.9, 2.9, 2.8, 2.7, 2.7], borderColor: '#f43f5e' },
+                    { label: 'HICP General (%)', data: [2.6, 2.5, 2.6, 2.2, 1.8, 1.8], borderColor: '#10b981' }
+                ]
+            },
+            'ez-bonds': {
+                title: 'Eurozona: Rendimiento Bund 10Y vs Spread BTP Italiano',
+                desc: 'Evalúa la fragmentación financiera y el riesgo soberano en la periferia europea.',
+                source: 'https://www.tradingview.com/symbols/TVC-DE10Y/',
+                impact: 'Fragmentación contenida por el instrumento TPI del BCE.',
+                corr: 'Directa con apetito de riesgo en renta variable europea.',
+                next: 'Subastas de Deuda del Tesoro Alemán.',
+                labels: ['May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+                datasets: [
+                    { label: 'Bund 10Y Alemán (%)', data: [2.55, 2.40, 2.35, 2.25, 2.22, 2.28], borderColor: '#a855f7' },
+                    { label: 'Spread Italia-Alemania (bps / 10)', data: [13.2, 12.8, 13.0, 12.5, 12.0, 12.2], borderColor: '#f59e0b', borderDash: [4, 4] }
+                ]
+            },
+            'fx-divergence': {
+                title: 'Global FX: Diferencial de Tipos EE. UU. (Fed) vs Eurozona (BCE)',
+                desc: 'El motor fundamental de la tendencia a largo plazo del par EUR/USD.',
+                source: 'https://fred.stlouisfed.org/',
+                impact: 'Soporta valorización relativa del DXY frente al EUR.',
+                corr: 'Alta correlación positiva con EUR/USD (+0.88).',
+                next: 'Decisiones cruzadas de Fed y BCE.',
+                labels: ['May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+                datasets: [
+                    { label: 'Tipo Fed - BCE (%)', data: [1.50, 1.75, 1.75, 1.75, 1.50, 1.50], borderColor: '#06b6d4' },
+                    { label: 'EUR/USD Rate (x100 - 100)', data: [8.5, 7.2, 8.8, 9.1, 8.2, 8.45], borderColor: '#ec4899' }
+                ]
+            },
+            'fx-pairs': {
+                title: 'Global FX: Evolución EUR/USD y USD/JPY',
+                desc: 'Rastreo comparativo de los dos pares de divisas más líquidos del mundo.',
+                source: 'https://www.tradingview.com/symbols/EURUSD/',
+                impact: 'USD/JPY sensible a intervención del Ministerio de Finanzas de Japón.',
+                corr: 'Inversa con rendimiento de bonos globales.',
+                next: 'Datos de la Balanza Comercial de Japón.',
+                labels: ['May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+                datasets: [
+                    { label: 'EUR/USD', data: [1.085, 1.072, 1.088, 1.091, 1.082, 1.0845], borderColor: '#3b82f6' },
+                    { label: 'USD/JPY / 100', data: [1.55, 1.57, 1.60, 1.46, 1.48, 1.523], borderColor: '#f43f5e' }
+                ]
+            },
+            'fx-dxy': {
+                title: 'Índice DXY vs Tasa Política del Banco de Japón (BoJ)',
+                desc: 'Analiza si el endurecimiento de Japón puede provocar un desenfrenado "Unwind" de Carry Trade.',
+                source: 'https://www.boj.or.jp/en/index.htm',
+                impact: 'Riesgo de liquidez si el BoJ sube tipos agresivamente.',
+                corr: 'Inversa con activos de riesgo globales.',
+                next: 'Informe Trimestral de Perspectivas del BoJ.',
+                labels: ['May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct'],
+                datasets: [
+                    { label: 'DXY Index', data: [105.2, 105.8, 104.5, 101.8, 102.9, 103.85], borderColor: '#10b981' },
+                    { label: 'BoJ Rate (%) x10', data: [1.0, 1.0, 2.5, 2.5, 2.5, 2.5], borderColor: '#f43f5e', borderDash: [3, 3] }
+                ]
+            }
+        };
+
+        // Render KPI Header
+        function renderKPIs(module) {
+            const kpiContainer = document.getElementById('kpi-grid');
+            kpiContainer.innerHTML = '';
+            const list = kpiConfigurations[module] || kpiConfigurations['us'];
+
+            list.forEach(kpi => {
+                const card = `
+                    <div class="terminal-card p-4 rounded-xl relative overflow-hidden group">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">${kpi.title}</span>
+                            <i data-lucide="${kpi.icon}" class="w-4 h-4 text-${kpi.col}-400"></i>
+                        </div>
+                        <div class="text-2xl font-bold font-mono text-white">${kpi.val}</div>
+                        <div class="mt-2 flex items-center justify-between text-xs">
+                            <span class="text-${kpi.col}-400 font-mono font-medium">${kpi.sub}</span>
+                        </div>
+                        <div class="absolute bottom-0 left-0 right-0 h-1 bg-${kpi.col}-500"></div>
+                    </div>
+                `;
+                kpiContainer.innerHTML += card;
+            });
+            lucide.createIcons();
+        }
+
+        // Render Subtabs
+        function renderSubtabs(module) {
+            const container = document.getElementById('subtabs-container');
+            container.innerHTML = '';
+            const tabs = subtabsByModule[module] || subtabsByModule['us'];
+
+            tabs.forEach((t, idx) => {
+                const isActive = idx === 0;
+                const activeClass = isActive 
+                    ? 'active border-blue-500/40 bg-blue-500/10 text-blue-400' 
+                    : 'border-transparent text-gray-400 hover:text-white hover:bg-gray-800';
+
+                const btn = `
+                    <button onclick="switchSubtab('${t.id}')" id="subtab-${t.id}" class="subtab-btn px-4 py-2 rounded-lg text-xs font-semibold font-mono border ${activeClass} flex items-center gap-2">
+                        <i data-lucide="${t.icon}" class="w-4 h-4"></i> ${t.label}
+                    </button>
+                `;
+                container.innerHTML += btn;
+            });
+
+            currentCategory = tabs[0].id;
+            lucide.createIcons();
+        }
+
+        // Set Main Regional Module
+        function setMainModule(mod) {
+            currentModule = mod;
+            
+            document.querySelectorAll('.module-nav-btn').forEach(b => {
+                b.classList.remove('active', 'border-blue-500/40', 'bg-blue-500/10', 'text-blue-400');
+                b.classList.add('border-transparent', 'text-gray-400');
+            });
+
+            const activeBtn = document.getElementById(`module-btn-${mod}`);
+            activeBtn.classList.add('active', 'border-blue-500/40', 'bg-blue-500/10', 'text-blue-400');
+            activeBtn.classList.remove('border-transparent', 'text-gray-400');
+
+            renderKPIs(mod);
+            renderSubtabs(mod);
+            renderChart(currentCategory);
+            populateTable();
+        }
+
+        // Switch Active Subtab
+        function switchSubtab(subtabId) {
+            currentCategory = subtabId;
+            document.querySelectorAll('.subtab-btn').forEach(b => {
+                b.classList.remove('active', 'border-blue-500/40', 'bg-blue-500/10', 'text-blue-400');
+                b.classList.add('border-transparent', 'text-gray-400');
+            });
+
+            const btn = document.getElementById(`subtab-${subtabId}`);
+            if (btn) {
+                btn.classList.add('active', 'border-blue-500/40', 'bg-blue-500/10', 'text-blue-400');
+                btn.classList.remove('border-transparent', 'text-gray-400');
+            }
+
+            renderChart(subtabId);
+            populateTable();
+        }
+
+        // Populate Table Engine
+        function populateTable() {
+            const tbody = document.getElementById('metrics-table-body');
+            tbody.innerHTML = '';
+            const search = document.getElementById('metric-search').value.toLowerCase();
+
+            const filtered = globalMetricsData.filter(m => {
+                const matchesModule = (currentModule === 'all') || (m.module === currentModule);
+                const matchesSearch = m.name.toLowerCase().includes(search) || m.region.toLowerCase().includes(search);
+                return matchesModule && matchesSearch;
+            });
+
+            filtered.forEach(m => {
+                let badgeClass = 'bg-gray-800 text-gray-300';
+                if (m.signalType === 'bullish') badgeClass = 'bg-emerald-950 text-emerald-400 border border-emerald-800';
+                if (m.signalType === 'bearish') badgeClass = 'bg-rose-950 text-rose-400 border border-rose-800';
+                if (m.signalType === 'caution') badgeClass = 'bg-amber-950 text-amber-400 border border-amber-800';
+
+                const row = `
+                    <tr class="hover:bg-gray-900/50 transition">
+                        <td class="p-3 font-semibold text-white">${m.name}</td>
+                        <td class="p-3 text-gray-400">${m.region}</td>
+                        <td class="p-3 text-white font-bold">${m.last}</td>
+                        <td class="p-3 text-gray-500">${m.prev}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] ${badgeClass}">${m.signal}</span></td>
+                        <td class="p-3 text-right">
+                            <a href="${m.link}" target="_blank" class="text-blue-400 hover:text-blue-300 underline inline-flex items-center gap-1">
+                                Ver <i data-lucide="external-link" class="w-3 h-3"></i>
+                            </a>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+            lucide.createIcons();
+        }
+
+        // Render Active Chart
+        function renderChart(catKey) {
+            const config = chartDataMap[catKey] || chartDataMap['us-liquidity'];
+
+            document.getElementById('chart-title').innerText = config.title;
+            document.getElementById('chart-desc').innerText = config.desc;
+            document.getElementById('official-source-link').href = config.source;
+            document.getElementById('insight-impact').innerText = config.impact;
+            document.getElementById('insight-corr').innerText = config.corr;
+            document.getElementById('insight-next').innerText = config.next;
+
+            const ctx = document.getElementById('macroChart').getContext('2d');
+
+            if (currentChart) {
+                currentChart.destroy();
+            }
+
+            currentChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: config.labels,
+                    datasets: config.datasets.map(ds => ({
+                        ...ds,
+                        tension: 0.3,
+                        pointRadius: 3
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { labels: { color: '#9ca3af', font: { family: 'JetBrains Mono', size: 11 } } },
+                        tooltip: { backgroundColor: '#121721', titleColor: '#fff', bodyColor: '#c9d1d9', borderColor: '#1f293d', borderWidth: 1 }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#6b7280', font: { family: 'JetBrains Mono' } }, grid: { color: '#1f293d' } },
+                        y: { ticks: { color: '#6b7280', font: { family: 'JetBrains Mono' } }, grid: { color: '#1f293d' } }
+                    }
+                }
+            });
+        }
+
+        // CALCULATOR 1: FX Carry Trade Engine
+        function calculateFXCarry() {
+            const longRate = parseFloat(document.getElementById('carry-long').value) || 0;
+            const shortRate = parseFloat(document.getElementById('carry-short').value) || 0;
+            const leverage = parseFloat(document.getElementById('carry-leverage').value) || 1;
+
+            const netDiff = longRate - shortRate;
+            const totalCarry = netDiff * leverage;
+
+            const resElem = document.getElementById('carry-result');
+            const statusElem = document.getElementById('carry-status');
+
+            resElem.innerText = (totalCarry >= 0 ? '+' : '') + totalCarry.toFixed(2) + '% p.a.';
+
+            if (totalCarry > 8) {
+                statusElem.innerText = 'CARRY TRADE MUY ATRACTIVO';
+                statusElem.className = 'block text-[10px] text-emerald-400 mt-1 font-bold';
+            } else if (totalCarry > 0) {
+                statusElem.innerText = 'CARRY POSITIVO MODERADO';
+                statusElem.className = 'block text-[10px] text-blue-400 mt-1 font-bold';
+            } else {
+                statusElem.innerText = 'CARRY NEGATIVO (COSTOSO)';
+                statusElem.className = 'block text-[10px] text-rose-400 mt-1 font-bold';
+            }
+        }
+
+        // CALCULATOR 2: Recession Probability
+        function calculateRecessionProb() {
+            const spread = parseFloat(document.getElementById('spread-input').value) || 0;
+            let baseProb = 25 - (spread * 0.4);
+            baseProb = Math.min(Math.max(baseProb, 5), 85);
+            document.getElementById('recession-prob-result').innerText = baseProb.toFixed(1) + '%';
+        }
+
+        // CALCULATOR 3: TGA Drain
+        function calculateTGADrain() {
+            const issue = parseFloat(document.getElementById('tga-issue-input').value) || 0;
+            const netDrain = issue * 0.6;
+            document.getElementById('tga-drain-result').innerText = `-$${netDrain.toFixed(1)}B`;
+        }
+
+        // Timeframe Selector Placeholder
+        function updateTimeframe(tf) {
+            document.querySelectorAll('.tf-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white', 'font-bold');
+                btn.classList.add('text-gray-400');
+            });
+            event.target.classList.add('bg-blue-600', 'text-white', 'font-bold');
+            event.target.classList.remove('text-gray-400');
+        }
+
+        // Search Event Listener
+        document.getElementById('metric-search').addEventListener('input', populateTable);
+
+        // Initial App Launch
+        setMainModule('us');
+        calculateFXCarry();
+        calculateRecessionProb();
+        calculateTGADrain();
+    </script>
+</body>
+</html>
